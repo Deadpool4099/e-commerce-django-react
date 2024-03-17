@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from .db_settings import db_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -74,22 +75,7 @@ WSGI_APPLICATION = 'buy_anything.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'HOST':'localhost',
-        'PORT':'5432',
-        'USER':'tejaswi.kompella',
-        'PASSWORD':'Tejaswi@Kompella@99',
-        'NAME':'buy_anything'
-
-
-# 'ENGINE': '',
-#         'NAME': 'myDBname',
-#         'USER': 'myUser',
-#         'PASSWORD': 'myPass',
-#         'HOST': '127.0.0.1',
-#         'PORT': '8000',
-    }
+    'default': db_settings
 }
 
 
