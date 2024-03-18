@@ -1,153 +1,90 @@
-# Import DRF modules
-from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework import status
 
-# Import DRF serializers
-from .serializers import UserSerializer
-
-# Import Django authentication
 from django.contrib.auth import authenticate, login, logout
 from django.utils.encoding import force_bytes, force_str
-# Import Django User model
+from django.utils.http import urlsafe_base64_decode
+
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 
-# Import Django messages framework
-from django.contrib import messages
+from .serializers import RegisterSerializer, UserSerializer
+from .helpers import send_activation_mail
 
-# Import other necessary modules
-from .tokens import generate_token
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.contrib.sites.shortcuts import get_current_site
-from django.template.loader import render_to_string
-from django.core.mail import EmailMessage
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup(request):
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        user = User.objects.get(username=request.data['username'])
+        user.set_password(request.data['password'])
+        user.is_active = False
+        user.save()
+        token = Token.objects.create(user=user)
+        send_activation_mail(request, user, token)
+        return Response({'user': serializer.data}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-from django.shortcuts import render
-
-class HomeView(APIView):
-    def get(self, request):
-        return render(request, 'authentication/index.html')
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.shortcuts import redirect, render
-from django.views import View
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
-from django.core.mail import send_mail, EmailMessage
-from django.template.loader import render_to_string
-from django.contrib.sites.shortcuts import get_current_site
-from django.conf import settings
-from .tokens import generate_token
-
-class SignupView(View):
-    def get(self, request):
-        return render(request, "authentication/signup.html")
-
-    def post(self, request):
-        username = request.POST.get('username')
-        fname = request.POST.get('fname')
-        lname = request.POST.get('lname')
-        email = request.POST.get('email')
-        pass1 = request.POST.get('pass1')
-        pass2 = request.POST.get('pass2')
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists! Please try another username.")
-            return redirect('home')
-
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already registered!")
-            return redirect('home')
-
-        if len(username) > 20:
-            messages.error(request, "Username must be under 20 characters!")
-            return redirect('home')
-
-        if pass1 != pass2:
-            messages.error(request, "Passwords don't match!")
-            return redirect('home')
-
-        if not username.isalnum():
-            messages.error(request, "Username must be alphanumeric!")
-            return redirect('home')
-
-        myuser = User.objects.create_user(username, email, pass1)
-        myuser.first_name = fname
-        myuser.last_name = lname
-        myuser.is_active = False
-        myuser.save()
-
-        messages.success(request, "Your account has been created successfully! Please check your email to confirm your email address in order to activate your account.")
-
-        # Welcome Email
-        subject = "Welcome to BuyAnything.com - Django Login!!"
-        message = f"Hello {myuser.first_name}!\nWelcome to BuyAnything.com!\nThank you for visiting our website. We have also sent you a confirmation email, please confirm your email address.\n\nThank you,\n"
-        from_email = settings.EMAIL_HOST_USER
-        to_email = [myuser.email]
-        send_mail(subject, message, from_email, to_email, fail_silently=True)
-
-        # Email Address Confirmation Email
-        current_site = get_current_site(request)
-        email_subject = "Confirm your Email @ BuyAnything.com - Django Login!!"
-        message2 = render_to_string('email_confirmation.html', {
-            'name': myuser.first_name,
-            'domain': current_site.domain,
-            'uid': urlsafe_base64_encode(force_bytes(myuser.pk)),
-            'token': generate_token.make_token(myuser)
-        })
-        email = EmailMessage(
-            email_subject,
-            message2,
-            settings.EMAIL_HOST_USER,
-            [myuser.email],
-        )
-        email.fail_silently = True
-        email.send()
-
-        return redirect('signin')
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signin(request):
+    # user = get_object_or_404(User, username=request.data['username'])
+    # if user.check_password(request.data['password']):
+    user = authenticate(username=request.data['username'], password=request.data['password'])
+    if not user:
+        return Response({"Error": "Invalid Credentials!"}, status=status.HTTP_404_NOT_FOUND)
+    token, created = Token.objects.get_or_create(user=user)
+    # token = Token.objects.create(user=user)
+    # token.save()
+    login(request, user)
+    serializer = UserSerializer(user)
+    return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_200_OK)
 
 
-class ActivateView(APIView):
-    permission_classes = [AllowAny]
 
-    def get(self, request, uidb64, token):
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def test_token(request):
+    return Response("passed!")
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def signout(request):
+    # token_value = request.headers['Authorization']
+    # key = token_value.split(' ')[-1]
+    # user = Token.objects.get(key=key).user
+    # request.data = user
+    logout(request)
+    return Response({"success":"Logged out successfully"}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user:
         try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = Token.objects.get(key=token).user
+        except:
             user = None
 
-        if user is not None and generate_token.check_token(user, token):
-            user.is_active = True
-            user.save()
-            login(request, user)
-            messages.success(request, "Your Account has been activated!!")
-            return redirect('signin')
-        else:
-            return Response({'error': 'Invalid activation link'}, status=status.HTTP_400_BAD_REQUEST)
+    if user is not None:
+        user.is_active = True
+        user.save()
+        return Response({'success': 'Account Activated'}, status=status.HTTP_200_OK)
+    else:
+        return Response({'error': 'Invalid activation link'}, status=status.HTTP_400_BAD_REQUEST)
 
-class SigninView(View):
-    def get(self, request):
-        return render(request, "authentication/signin.html")
-
-    def post(self, request):
-        username = request.POST.get('username')
-        password = request.POST.get('pass1')
-
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            fname = user.first_name
-            return render(request, "authentication/index.html", {"fname": fname})
-        else:
-            messages.error(request, "Bad Credentials!")
-            return redirect('home')
-
-class SignoutView(View):
-    def get(self, request):
-        logout(request)
-        messages.success(request, "Logged Out Successfully!")
-        return redirect('home')
