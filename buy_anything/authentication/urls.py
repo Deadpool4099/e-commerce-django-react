@@ -22,5 +22,6 @@ urlpatterns = [
     path('test_token', test_token, name='test_token')
 ]
 
+
 # Include the DRF router URLs
 urlpatterns += router.urls
