@@ -10,8 +10,3 @@ function App() {
 }
 
 export default App;
-
-// const appDiv = document.getElementById("app");
-// render(
-//     <React.StrictMode><App /></React.StrictMode>,
-//     appDiv);
