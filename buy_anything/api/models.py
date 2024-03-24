@@ -17,6 +17,9 @@ class Country(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=80)
+    
+    def __str__(self):
+        return self.name
 
 
 class Address(models.Model):
@@ -101,6 +104,10 @@ class ProductCategory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     sub_category = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, blank=True, null=True)
+    
+    
+    def __str__(self) -> str:
+        return self.product + '___' + self.category + '___' + self.sub_category
 
 
 class ProductCombination(models.Model):
@@ -112,21 +119,9 @@ class ProductCombination(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.OneToOneField(Product, on_delete=models.CASCADE)
-
-
-class ProductItem(models.Model):
-
-    class Meta:
-        db_table = 'product_item'
-        verbose_name = "Product Item"
-        verbose_name_plural = "Product Items"
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    product_combination = models.ForeignKey(ProductCombination, on_delete=models.CASCADE)
-    price = models.PositiveIntegerField(default=0)
-    stock_available = models.PositiveIntegerField(default=0)
-    discount = models.PositiveIntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return self.product
 
 
 class VariationType(models.Model):
@@ -170,6 +165,22 @@ class VariationCombination(models.Model):
     product_combination = models.ForeignKey(ProductCombination, on_delete=models.CASCADE)
     variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
     variation_type = models.ForeignKey(VariationType, on_delete=models.SET_NULL, null=True, blank=True)
+    
+
+class ProductItem(models.Model):
+
+    class Meta:
+        db_table = 'product_item'
+        verbose_name = "Product Item"
+        verbose_name_plural = "Product Items"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    variation_combination = models.ForeignKey(VariationCombination, on_delete=models.CASCADE)
+    price = models.PositiveIntegerField(default=0)
+    stock_available = models.PositiveIntegerField(default=0)
+    discount = models.PositiveIntegerField(default=0)
+
 
 ####
 
