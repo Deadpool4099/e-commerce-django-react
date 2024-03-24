@@ -32,6 +32,16 @@ SECRET_KEY = 'django-insecure-g=vn%ir(_tatwh*(+ue970!2r)z14xqo!o#+zcu0lw7mrr&ipi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+if DEBUG:
+    # Disable caching in development
+    # This is not recommended for production
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+    CACHE_MIDDLEWARE_SECONDS = 0
+
 ALLOWED_HOSTS = []
 
 
@@ -48,7 +58,7 @@ INSTALLED_APPS = [
     'authentication.apps.AuthenticationConfig',
     'rest_framework',
     'rest_framework.authtoken',
-    'frontend.apps.FrontendConfig'
+    'frontend.apps.FrontendConfig',
 ]
 
 MIDDLEWARE = [
@@ -66,7 +76,7 @@ ROOT_URLCONF = 'buy_anything.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["templates"],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -144,5 +154,3 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAdminUser'
    ),
 }
-
-
