@@ -107,7 +107,7 @@ class ProductCategory(models.Model):
     
     
     def __str__(self) -> str:
-        return self.product + '___' + self.category + '___' + self.sub_category
+        return str(self.product) + '___' + str(self.category) + '___' + str(self.sub_category)
 
 
 class ProductCombination(models.Model):
@@ -136,7 +136,7 @@ class VariationType(models.Model):
     sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE)
     
     def __str__(self) -> str:
-        return self.name
+        return self.name + '___' + str(self.sub_category)
 
 
 class VariationClass(models.Model):
@@ -166,6 +166,9 @@ class VariationCombination(models.Model):
     variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
     variation_type = models.ForeignKey(VariationType, on_delete=models.SET_NULL, null=True, blank=True)
     
+    def __str__(self) -> str:
+        return str(self.product_combination) + '___' + str(self.variation_class) + '___' + str(self.variation_type)
+    
 
 class ProductItem(models.Model):
 
@@ -180,6 +183,9 @@ class ProductItem(models.Model):
     price = models.PositiveIntegerField(default=0)
     stock_available = models.PositiveIntegerField(default=0)
     discount = models.PositiveIntegerField(default=0)
+    
+    def __str__(self) -> str:
+        return str(self.product) + '___' + str(self.variation_combination)
 
 
 ####
@@ -312,6 +318,9 @@ class PaymentStatus(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     status = models.CharField(max_length=20, choices=choices, unique=True)
+    
+    def __str__(self) -> str:
+        return self.status
 
 
 class PaymentDetail(models.Model):
@@ -348,6 +357,9 @@ class OrderStatus(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     status = models.CharField(max_length=50, choices=choices, unique=True)
+    
+    def __str__(self) -> str:
+        return self.status
 
 
 class Order(models.Model):
@@ -364,10 +376,6 @@ class Order(models.Model):
     payment = models.ForeignKey(PaymentDetail, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
-
-
 
 
 
