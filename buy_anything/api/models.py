@@ -111,7 +111,7 @@ class ProductCombination(models.Model):
         verbose_name_plural = "Product Combinations"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.OneToOneField(Product, on_delete=models.CASCADE)
 
 
 class ProductItem(models.Model):
