@@ -5,8 +5,8 @@ import App from "./components/App";
 
 const appDiv = ReactDOM.createRoot(document.getElementById('app'));
 appDiv.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
 
