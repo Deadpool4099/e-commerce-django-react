@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Country, Address, Category, SubCategory, ProductCategory, \
-    ProductCombination, ProductItem, VariationType, VariationClass, \
+    ProductItem, VariationType, VariationClass, \
         VariationCombination, ShoppingCart, ShoppingCartItem, UserReview, \
             WishlistTub, WishListItem, PaymentMethod, PaymentStatus, \
                 PaymentDetail, OrderStatus, Order, Product
@@ -11,7 +11,6 @@ admin.site.register(Address)
 admin.site.register(Category)
 admin.site.register(SubCategory)
 admin.site.register(ProductCategory)
-admin.site.register(ProductCombination)
 admin.site.register(ProductItem)
 admin.site.register(VariationType)
 admin.site.register(VariationClass)
