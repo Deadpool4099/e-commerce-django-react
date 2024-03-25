@@ -16,7 +16,7 @@ class Country(models.Model):
         verbose_name_plural = "Countries"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=80)
+    name = models.CharField(max_length=80, unique=True)
     
     def __str__(self):
         return self.name
@@ -54,7 +54,7 @@ class Product(models.Model):
         verbose_name_plural = "Products"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
     
     def __str__(self) -> str:
@@ -83,6 +83,7 @@ class SubCategory(models.Model):
         db_table = 'sub_category'
         verbose_name = "Sub Category"
         verbose_name_plural = "Sub Categories"
+        unique_together = ('name', 'category')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
@@ -90,7 +91,7 @@ class SubCategory(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     
     def __str__(self) -> str:
-        return self.name
+        return str(self.category) + '___' + self.name
 
 
 class ProductCategory(models.Model):
@@ -99,15 +100,15 @@ class ProductCategory(models.Model):
         db_table = 'product_category'
         verbose_name = "Product Category"
         verbose_name_plural = "Product Categories"
+        unique_together = ('product', 'sub_category')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, blank=True, null=True)
     sub_category = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, blank=True, null=True)
     
     
     def __str__(self) -> str:
-        return str(self.product) + '___' + str(self.category) + '___' + str(self.sub_category)
+        return str(self.product) + '___' + str(self.sub_category)
 
 
 class ProductCombination(models.Model):
@@ -121,7 +122,7 @@ class ProductCombination(models.Model):
     product = models.OneToOneField(Product, on_delete=models.CASCADE)
     
     def __str__(self) -> str:
-        return self.product
+        return str(self.product)
 
 
 class VariationType(models.Model):
@@ -130,6 +131,7 @@ class VariationType(models.Model):
         db_table = 'variation_type'
         verbose_name = "Variation Type"
         verbose_name_plural = "Variation Types"
+        unique_together = ('name', 'sub_category')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
@@ -145,13 +147,14 @@ class VariationClass(models.Model):
         db_table = 'variation_class'
         verbose_name = "Variation Class"
         verbose_name_plural = "Variation Classes"
+        unique_together = ('variation_type', 'value',)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     variation_type = models.ForeignKey(VariationType, on_delete=models.CASCADE)
     value = models.CharField(max_length=20)
     
     def __str__(self) -> str:
-        return self.value
+        return str(self.variation_type) + '___' + self.value
 
 
 class VariationCombination(models.Model):
@@ -160,14 +163,14 @@ class VariationCombination(models.Model):
         db_table = 'variation_combination'
         verbose_name = "Variation Combination"
         verbose_name_plural = "Variation Combinations"
+        unique_together = ('product_combination', 'variation_class')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product_combination = models.ForeignKey(ProductCombination, on_delete=models.CASCADE)
     variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
-    variation_type = models.ForeignKey(VariationType, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self) -> str:
-        return str(self.product_combination) + '___' + str(self.variation_class) + '___' + str(self.variation_type)
+        return str(self.product_combination) + '___' + str(self.variation_class)
     
 
 class ProductItem(models.Model):
@@ -178,14 +181,13 @@ class ProductItem(models.Model):
         verbose_name_plural = "Product Items"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    variation_combination = models.ForeignKey(VariationCombination, on_delete=models.CASCADE)
+    variation_combination = models.OneToOneField(VariationCombination, on_delete=models.CASCADE)
     price = models.PositiveIntegerField(default=0)
     stock_available = models.PositiveIntegerField(default=0)
     discount = models.PositiveIntegerField(default=0)
     
     def __str__(self) -> str:
-        return str(self.product) + '___' + str(self.variation_combination)
+        return str(self.variation_combination)
 
 
 ####
@@ -214,9 +216,10 @@ class ShoppingCartItem(models.Model):
         db_table = 'shopping_cart_item'
         verbose_name = "Shopping Cart Item"
         verbose_name_plural = "Shopping Cart Items"
+        unique_together = ('product_item', 'shopping_cart')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product_item_id = models.ForeignKey(ProductItem, on_delete=models.CASCADE)
+    product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     shopping_cart = models.ForeignKey(ShoppingCart, on_delete=models.CASCADE)
 
@@ -246,6 +249,8 @@ class UserReview(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     rating = models.PositiveIntegerField(choices=rating_choices, default=0)
     comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 #####
 
@@ -271,6 +276,7 @@ class WishListItem(models.Model):
         db_table = 'wishlist_item'
         verbose_name = "Wishlist Item"
         verbose_name_plural = "Wishlist Items"
+        unique_together = ('wishlist_tub', 'product_item')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     wishlist_tub = models.ForeignKey(WishlistTub, on_delete=models.CASCADE)
