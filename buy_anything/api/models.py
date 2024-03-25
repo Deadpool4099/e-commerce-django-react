@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
+from django.contrib.postgres.fields import JSONField
 
 # Create your models here.
 
@@ -111,20 +112,6 @@ class ProductCategory(models.Model):
         return str(self.product) + '___' + str(self.sub_category)
 
 
-class ProductCombination(models.Model):
-
-    class Meta:
-        db_table = 'product_combination'
-        verbose_name = "Product Combination"
-        verbose_name_plural = "Product Combinations"
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.OneToOneField(Product, on_delete=models.CASCADE)
-    
-    def __str__(self) -> str:
-        return str(self.product)
-
-
 class VariationType(models.Model):
 
     class Meta:
@@ -157,22 +144,6 @@ class VariationClass(models.Model):
         return str(self.variation_type) + '___' + self.value
 
 
-class VariationCombination(models.Model):
-
-    class Meta:
-        db_table = 'variation_combination'
-        verbose_name = "Variation Combination"
-        verbose_name_plural = "Variation Combinations"
-        unique_together = ('product_combination', 'variation_class')
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product_combination = models.ForeignKey(ProductCombination, on_delete=models.CASCADE)
-    variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    def __str__(self) -> str:
-        return str(self.product_combination) + '___' + str(self.variation_class)
-    
-
 class ProductItem(models.Model):
 
     class Meta:
@@ -181,15 +152,31 @@ class ProductItem(models.Model):
         verbose_name_plural = "Product Items"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    variation_combination = models.OneToOneField(VariationCombination, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     price = models.PositiveIntegerField(default=0)
     stock_available = models.PositiveIntegerField(default=0)
     discount = models.PositiveIntegerField(default=0)
     
+    # def __str__(self) -> str:
+    #     return str(self.variation_combination)
+
+
+class VariationCombination(models.Model):
+
+    class Meta:
+        db_table = 'variation_combination'
+        verbose_name = "Variation Combination"
+        verbose_name_plural = "Variation Combinations"
+        unique_together = ('product_item', 'variation_type')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE, default=None, null=True)
+    variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
+    variation_type = models.ForeignKey(VariationType, on_delete=models.SET_NULL, null=True, blank=True)
+    
     def __str__(self) -> str:
-        return str(self.variation_combination)
-
-
+        return str(self.product_item) + '___' + str(self.variation_class)
+    
 ####
 
 
