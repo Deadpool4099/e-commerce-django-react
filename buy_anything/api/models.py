@@ -175,7 +175,7 @@ class VariationCombination(models.Model):
     variation_type = models.ForeignKey(VariationType, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self) -> str:
-        return str(self.product_item) + '___' + str(self.variation_class)
+        return str(self.product_item) + '___' + str(self.variation_type)
     
 ####
 
