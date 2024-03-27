@@ -47,21 +47,6 @@ class Address(models.Model):
 ######################################################################
 #### Product Related
 ######################################################################
-class Product(models.Model):
-
-    class Meta:
-        db_table = 'product'
-        verbose_name = "Product"
-        verbose_name_plural = "Products"
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50, unique=True)
-    description = models.TextField()
-    
-    def __str__(self) -> str:
-        return self.name
-    
-
 
 class Category(models.Model):
 
@@ -94,6 +79,22 @@ class SubCategory(models.Model):
     def __str__(self) -> str:
         return str(self.category) + '___' + self.name
 
+
+class Product(models.Model):
+
+    class Meta:
+        db_table = 'product'
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField()
+    sub_category = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, blank=True, null=True)
+    
+    def __str__(self) -> str:
+        return self.name
+    
 
 class ProductCategory(models.Model):
 
@@ -157,8 +158,8 @@ class ProductItem(models.Model):
     stock_available = models.PositiveIntegerField(default=0)
     discount = models.PositiveIntegerField(default=0)
     
-    # def __str__(self) -> str:
-    #     return str(self.variation_combination)
+    def __str__(self) -> str:
+        return str(self.product) + '___ProductItem__' + str(self.id)
 
 
 class VariationCombination(models.Model):
@@ -171,11 +172,11 @@ class VariationCombination(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE, default=None, null=True)
-    variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
     variation_type = models.ForeignKey(VariationType, on_delete=models.SET_NULL, null=True, blank=True)
+    variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self) -> str:
-        return str(self.product_item) + '___' + str(self.variation_type)
+        return str(self.product_item) + '___' + str(self.variation_class)
     
 ####
 
