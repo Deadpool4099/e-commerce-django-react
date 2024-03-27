@@ -11,12 +11,40 @@ from django.utils.http import urlsafe_base64_decode
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
-
+from .models import Product, ProductItem
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def get_products(request):
+def product(request):
     pass
+    
+from rest_framework import generics
+from .models import ProductItem
+from .serializers import ProductItemWithDetailsSerializer#, ProductCategorySerializer
+
+
+class ProductItemListAPIView(generics.ListAPIView):
+    serializer_class = ProductItemWithDetailsSerializer
+    queryset = ProductItem.objects.all()
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return ProductItem.objects.all()
+
+
+# class ProductListAPIView(generics.ListAPIView):
+#     serializer_class = ProductCategorySerializer
+#     queryset = ProductItem.objects.all()
+#     permission_classes = [AllowAny]
+
+# from rest_framework import viewsets
+# from .models import Product
+# from .serializers import ProductSerializer
+
+# class ProductViewSet(viewsets.ModelViewSet):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#     permission_classes = [AllowAny]
 
 
 @api_view(['GET'])
