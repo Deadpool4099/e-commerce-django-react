@@ -1,5 +1,4 @@
 from django.urls import path, include
-from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 # from .views import SignupView, ActivateView, SigninView, SignoutView, HomeView
 from .views import signin, signup, signout, test_token, activate
