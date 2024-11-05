@@ -155,3 +155,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAdminUser'
    ),
 }
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
