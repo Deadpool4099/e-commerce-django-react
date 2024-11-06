@@ -11,16 +11,12 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-import os
-from . info import *
-from .db_settings import *
+from .config_handler.email_config import EmailConfig
+from .config_handler.db_config import DBConfig
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-EMAIL_USE_TLS = EMAIL_USE_TLS
-EMAIL_HOST = EMAIL_HOST
-EMAIL_HOST_USER = EMAIL_HOST_USER
-EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
-EMAIL_PORT = EMAIL_PORT
 
 
 # Quick-start development settings - unsuitable for production
@@ -58,8 +54,7 @@ INSTALLED_APPS = [
     'authentication.apps.AuthenticationConfig',
     'rest_framework',
     'rest_framework.authtoken',
-    'frontend.apps.FrontendConfig',
-    'corsheaders'
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -98,7 +93,14 @@ WSGI_APPLICATION = 'buy_anything.wsgi.application'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
-    'default': db_settings
+    'default': {
+        'ENGINE': DBConfig.ENGINE,
+        'HOST': DBConfig.HOST,
+        'PORT': DBConfig.PORT,
+        'USER': DBConfig.USER,
+        'PASSWORD': DBConfig.PASSWORD,
+        'NAME': DBConfig.NAME
+    }
 }
 
 
@@ -161,3 +163,13 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
+
+
+## Email settings
+EMAIL_BACKEND = EmailConfig.BACKEND
+EMAIL_USE_TLS = EmailConfig.USE_TLS
+EMAIL_HOST = EmailConfig.HOST
+EMAIL_HOST_USER = EmailConfig.USER
+EMAIL_HOST_PASSWORD = EmailConfig.PASSWORD
+EMAIL_PORT = EmailConfig.PORT
+####
