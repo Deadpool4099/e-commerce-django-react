@@ -23,15 +23,16 @@ class ProductItemWithDetailsSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name')
     # category = serializers.CharField(source='product.product_category.sub_category.category.name')
     # sub_category = serializers.SerializerMethodField()
+    """"""
     product_id = serializers.UUIDField(source='product.id')
     product_description = serializers.CharField(source='product.description')
     product_item_price = serializers.IntegerField(source='price')
     product_item_quantity = serializers.IntegerField(source='stock_available')
     product_item_discount = serializers.IntegerField(source='discount')
-    product_sub_category = serializers.CharField(source='product.sub_category.name')
-    product_category = serializers.CharField(source='product.sub_category.category.name')
+    # product_sub_category = serializers.CharField(source='product.sub_category.name')
+    # product_category = serializers.CharField(source='product.sub_category.category.name')
 
-    variation_combination = VariationCombinationSerializer(many=True, source='variationcombination_set')
+    # variation_combination = VariationCombinationSerializer(many=True, source='variationcombination_set')
 
     # def get_sub_category(self, obj):
     #     return [obj.product.product_category.sub_category.name]

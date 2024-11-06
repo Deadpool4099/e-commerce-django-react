@@ -38,7 +38,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
+            last_name=validated_data['last_name'],
+            is_active=False,
+            is_superuser=False,
+            is_staff=False
         )
 
         user.set_password(validated_data['password'])
@@ -50,4 +53,4 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
         class Meta(object):
             model = User
-            fields = ['id', 'username', 'email']
+            fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_superuser', 'is_staff']

@@ -23,10 +23,10 @@ def signup(request):
         serializer.save()
         user = User.objects.get(username=request.data['username'])
         user.set_password(request.data['password'])
-        user.is_active = False
         user.save()
         token = Token.objects.create(user=user)
         send_activation_mail(request, user, token)
+
         return Response({'user': serializer.data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
