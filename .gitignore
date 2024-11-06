@@ -6,7 +6,7 @@ node_modules/
 
 # C extensions
 *.so
-
+**/.env
 # Distribution / packaging
 bin/
 build/
