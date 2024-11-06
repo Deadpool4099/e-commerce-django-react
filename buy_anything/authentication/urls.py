@@ -1,4 +1,5 @@
 from django.urls import path, include
+# from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 # from .views import SignupView, ActivateView, SigninView, SignoutView, HomeView
 from .views import signin, signup, signout, test_token, activate
@@ -18,8 +19,9 @@ urlpatterns = [
     path('signin', signin, name='signin'),
     path('signout', signout, name='signout'),
     path('signup', signup, name='signup'),
-    path('test_token', test_token, name='test_token')
+    path('test-token', test_token, name='test_token')
 ]
+
 
 # Include the DRF router URLs
 urlpatterns += router.urls

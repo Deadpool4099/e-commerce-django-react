@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 from . info import *
 from .db_settings import *
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,6 +32,16 @@ SECRET_KEY = 'django-insecure-g=vn%ir(_tatwh*(+ue970!2r)z14xqo!o#+zcu0lw7mrr&ipi
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+if DEBUG:
+    # Disable caching in development
+    # This is not recommended for production
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+    CACHE_MIDDLEWARE_SECONDS = 0
+
 ALLOWED_HOSTS = []
 
 
@@ -47,6 +58,7 @@ INSTALLED_APPS = [
     'authentication.apps.AuthenticationConfig',
     'rest_framework',
     'rest_framework.authtoken',
+    'frontend.apps.FrontendConfig',
     'corsheaders'
 ]
 
@@ -66,7 +78,7 @@ ROOT_URLCONF = 'buy_anything.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["templates"],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -127,6 +139,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend/static/css')]
+
+# STATIC_ROOT = os.path.join(BASE_DIR,'frontend','static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

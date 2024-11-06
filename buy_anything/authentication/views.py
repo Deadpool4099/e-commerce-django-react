@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer, SignInSerializer
 from .helpers import send_activation_mail
 
 @api_view(['POST'])
@@ -35,12 +35,17 @@ def signup(request):
 def signin(request):
     # user = get_object_or_404(User, username=request.data['username'])
     # if user.check_password(request.data['password']):
+    # serializer = SignInSerializer(request.data)
+    # if serializer.is_valid():
     user = authenticate(username=request.data['username'], password=request.data['password'])
     if not user:
-        return Response({"Error": "Invalid Credentials!"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Invalid Credentials!"}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
     # token = Token.objects.create(user=user)
     # token.save()
+    if not token:
+        token = created
+        
     login(request, user)
     serializer = UserSerializer(user)
     return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_200_OK)
@@ -49,19 +54,19 @@ def signin(request):
 
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def test_token(request):
     return Response("passed!")
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def signout(request):
-    # token_value = request.headers['Authorization']
-    # key = token_value.split(' ')[-1]
-    # user = Token.objects.get(key=key).user
-    # request.data = user
+    token_value = request.headers['Authorization']
+    key = token_value.split(' ')[-1]
+    user = Token.objects.get(key=key).user
+    Token.objects.filter(user=user).delete()
     logout(request)
     return Response({"success":"Logged out successfully"}, status=status.HTTP_200_OK)
 
