@@ -16,9 +16,9 @@ router = DefaultRouter()
 urlpatterns = [
     # path('', HomeView.as_view(), name='home'),
     path('activate/<uidb64>/<token>', activate, name='activate'),
-    path('signin', signin, name='signin'),
-    path('signout', signout, name='signout'),
-    path('signup', signup, name='signup'),
+    path('login', signin, name='login'),
+    path('logout', signout, name='logout'),
+    path('register', signup, name='logout'),
     path('test-token', test_token, name='test_token')
 ]
 

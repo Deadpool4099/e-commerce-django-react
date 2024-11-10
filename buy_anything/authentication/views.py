@@ -68,7 +68,7 @@ def signin(request):
 def test_token(request):
     return Response("passed!")
 
-@api_view(['GET'])
+@api_view(['POST'])
 @authentication_classes([TokenAuthentication, SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def signout(request):
@@ -80,7 +80,7 @@ def signout(request):
     return Response({"success":"Logged out successfully"}, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def activate(request, uidb64, token):
     try:
