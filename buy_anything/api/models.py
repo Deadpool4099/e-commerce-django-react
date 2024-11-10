@@ -150,7 +150,7 @@ class ProductItem(models.Model):
     variation_class = models.ForeignKey(VariationClass, on_delete=models.PROTECT)
     
     def __str__(self) -> str:
-        return str(self.product) + '___' + str(self.variation_type) + '___' + str(self.variation_class)
+        return str(self.product) + '___' + str(self.variation_class)
     
     def clean(self):
         
