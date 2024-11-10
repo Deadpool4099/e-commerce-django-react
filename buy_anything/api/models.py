@@ -1,8 +1,9 @@
+import uuid
 from decimal import Decimal
 
 from django.db import models
 from django.contrib.auth.models import User
-import uuid
+from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 
 from .helpers import PERCENTAGE_VALIDATOR
@@ -113,7 +114,7 @@ class VariationType(models.Model):
     sub_category = models.ForeignKey(SubCategory, on_delete=models.PROTECT)
     
     def __str__(self) -> str:
-        return str(self.name) + '___' + str(self.sub_category)
+        return str(self.sub_category) + '___' + str(self.name)
 
 
 class VariationClass(models.Model):
@@ -138,18 +139,27 @@ class ProductItem(models.Model):
         db_table = 'product_item'
         verbose_name = "Product Item"
         verbose_name_plural = "Product Items"
+        unique_together = ('product', 'variation_type', 'variation_class')
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     price = models.PositiveIntegerField(default=0)
     stock_available = models.PositiveIntegerField(default=0)
-    discount = models.DecimalField(max_digits=3 ,default=Decimal(0), decimal_places=2, validators=PERCENTAGE_VALIDATOR)
+    discount = models.DecimalField(max_digits=4 ,default=Decimal(0), decimal_places=2, validators=PERCENTAGE_VALIDATOR)
     variation_type = models.ForeignKey(VariationType, on_delete=models.PROTECT)
     variation_class = models.ForeignKey(VariationClass, on_delete=models.PROTECT)
     
     def __str__(self) -> str:
         return str(self.product) + '___' + str(self.variation_type) + '___' + str(self.variation_class)
-
+    
+    def clean(self):
+        
+        super().clean()
+        
+        if self.product.sub_category != self.variation_type.sub_category:
+            raise ValidationError("The sub_category of the product must match the sub_category of the variation type.")
+        if self.variation_class.variation_type != self.variation_type:
+            raise ValidationError("The variation class must belong to the variation type")
 
 # class VariationCombination(models.Model):
 #
