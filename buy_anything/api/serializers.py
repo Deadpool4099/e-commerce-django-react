@@ -1,23 +1,15 @@
 from rest_framework import serializers
-from .models import ProductItem, VariationCombination, ProductCategory
-
+from .models import Product, Category, SubCategory
 
 class VariationCombinationSerializer(serializers.ModelSerializer):
     variation_type = serializers.CharField(source='variation_class.variation_type.name')
     variation_class = serializers.CharField(source='variation_class.value')
 
+class ProductSerializer(serializers.ModelSerializer):
+    
     class Meta:
-        model = VariationCombination
-        fields = ['variation_type', 'variation_class']
-
-
-class ProductItemSerializer(serializers.ModelSerializer):
-    variation_combination = VariationCombinationSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ProductItem
-        fields = ['id', 'product', 'price', 'stock_available', 'discount', 'variation_combination']
-
+        model = Product
+        fields = ['id', 'name', 'description', 'sub_category']
 
 class ProductItemWithDetailsSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name')
