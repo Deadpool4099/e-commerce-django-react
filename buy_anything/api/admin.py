@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import Country, Address, Category, SubCategory, ProductCategory, \
+from .models import Country, Address, Category, SubCategory, \
     ProductItem, VariationType, VariationClass, \
-        VariationCombination, ShoppingCart, ShoppingCartItem, UserReview, \
+         ShoppingCart, ShoppingCartItem, UserReview, \
             WishlistTub, WishListItem, PaymentMethod, PaymentStatus, \
                 PaymentDetail, OrderStatus, Order, Product
 # Register your models here.
@@ -10,11 +10,9 @@ admin.site.register(Country)
 admin.site.register(Address)
 admin.site.register(Category)
 admin.site.register(SubCategory)
-admin.site.register(ProductCategory)
 admin.site.register(ProductItem)
 admin.site.register(VariationType)
 admin.site.register(VariationClass)
-admin.site.register(VariationCombination)
 admin.site.register(ShoppingCart)
 admin.site.register(ShoppingCartItem)
 admin.site.register(UserReview)

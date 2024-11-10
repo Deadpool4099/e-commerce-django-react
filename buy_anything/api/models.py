@@ -1,7 +1,11 @@
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
-from django.contrib.postgres.fields import JSONField
+from django.core.serializers.json import DjangoJSONEncoder
+
+from .helpers import PERCENTAGE_VALIDATOR
 
 # Create your models here.
 
@@ -31,7 +35,7 @@ class Address(models.Model):
         verbose_name_plural = "Addresses"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(to=User, on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=80)
     last_name = models.CharField(max_length=80)
     address_lane_1 = models.TextField()
@@ -39,7 +43,7 @@ class Address(models.Model):
     landmark = models.TextField(null=True)
     city = models.CharField(max_length=80)
     pin_code = models.CharField(max_length=10)
-    country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True)
+    country = models.ForeignKey(Country, on_delete=models.PROTECT)
     mobile = models.CharField(max_length=20)
 
 ####
@@ -60,7 +64,7 @@ class Category(models.Model):
     description = models.TextField()
     
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
 
 
 class SubCategory(models.Model):
@@ -74,10 +78,10 @@ class SubCategory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     description = models.TextField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT)
     
     def __str__(self) -> str:
-        return str(self.category) + '___' + self.name
+        return str(self.category) + '___' + str(self.name)
 
 
 class Product(models.Model):
@@ -90,27 +94,10 @@ class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
-    sub_category = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, blank=True, null=True)
+    sub_category = models.ForeignKey(SubCategory, on_delete=models.PROTECT)
     
     def __str__(self) -> str:
-        return self.name
-    
-
-class ProductCategory(models.Model):
-
-    class Meta:
-        db_table = 'product_category'
-        verbose_name = "Product Category"
-        verbose_name_plural = "Product Categories"
-        unique_together = ('product', 'sub_category')
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    sub_category = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, blank=True, null=True)
-    
-    
-    def __str__(self) -> str:
-        return str(self.product) + '___' + str(self.sub_category)
+        return str(self.name)
 
 
 class VariationType(models.Model):
@@ -123,10 +110,10 @@ class VariationType(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
-    sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE)
+    sub_category = models.ForeignKey(SubCategory, on_delete=models.PROTECT)
     
     def __str__(self) -> str:
-        return self.name + '___' + str(self.sub_category)
+        return str(self.name) + '___' + str(self.sub_category)
 
 
 class VariationClass(models.Model):
@@ -138,46 +125,50 @@ class VariationClass(models.Model):
         unique_together = ('variation_type', 'value',)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    variation_type = models.ForeignKey(VariationType, on_delete=models.CASCADE)
+    variation_type = models.ForeignKey(VariationType, on_delete=models.PROTECT)
     value = models.CharField(max_length=20)
     
     def __str__(self) -> str:
-        return str(self.variation_type) + '___' + self.value
+        return str(self.variation_type) + '___' + str(self.value)
 
 
 class ProductItem(models.Model):
-
+    
     class Meta:
         db_table = 'product_item'
         verbose_name = "Product Item"
         verbose_name_plural = "Product Items"
-
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     price = models.PositiveIntegerField(default=0)
     stock_available = models.PositiveIntegerField(default=0)
-    discount = models.PositiveIntegerField(default=0)
+    discount = models.DecimalField(max_digits=3 ,default=Decimal(0), decimal_places=2, validators=PERCENTAGE_VALIDATOR)
+    variation_type = models.ForeignKey(VariationType, on_delete=models.PROTECT)
+    variation_class = models.ForeignKey(VariationClass, on_delete=models.PROTECT)
     
     def __str__(self) -> str:
-        return str(self.product) + '___ProductItem__' + str(self.id)
+        return str(self.product) + '___' + str(self.variation_type) + '___' + str(self.variation_class)
 
 
-class VariationCombination(models.Model):
+# class VariationCombination(models.Model):
+#
+#     class Meta:
+#         db_table = 'variation_combination'
+#         verbose_name = "Variation Combination"
+#         verbose_name_plural = "Variation Combinations"
+#         unique_together = ('product_item', 'variation_type')
+#
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE)
+#     variation_type = models.ForeignKey(VariationType, on_delete=models.PROTECT)
+#     variation_class = models.ForeignKey(VariationClass, on_delete=models.PROTECT)
+#
+#     def __str__(self) -> str:
+#         return str(self.product_item) + '___' \
+#             + str(self.variation_type) + '___' \
+#             + str(self.variation_class)
 
-    class Meta:
-        db_table = 'variation_combination'
-        verbose_name = "Variation Combination"
-        verbose_name_plural = "Variation Combinations"
-        unique_together = ('product_item', 'variation_type')
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE, default=None, null=True)
-    variation_type = models.ForeignKey(VariationType, on_delete=models.SET_NULL, null=True, blank=True)
-    variation_class = models.ForeignKey(VariationClass, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    def __str__(self) -> str:
-        return str(self.product_item) + '___' + str(self.variation_class)
-    
 ####
 
 
@@ -193,7 +184,7 @@ class ShoppingCart(models.Model):
         verbose_name_plural = "Shopping Carts"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(to=User, on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -294,7 +285,7 @@ class PaymentMethod(models.Model):
     method = models.CharField(max_length=50, choices=choices, unique=True)
     
     def __str__(self) -> str:
-        return self.method
+        return str(self.method)
 
 
 class PaymentStatus(models.Model):
@@ -314,7 +305,7 @@ class PaymentStatus(models.Model):
     status = models.CharField(max_length=20, choices=choices, unique=True)
     
     def __str__(self) -> str:
-        return self.status
+        return str(self.status)
 
 
 class PaymentDetail(models.Model):
@@ -325,9 +316,10 @@ class PaymentDetail(models.Model):
         verbose_name_plural = "Payment Details"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True, blank=True)
-    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.PROTECT)
+    payment_status = models.ForeignKey(PaymentStatus, on_delete=models.PROTECT)
     shopping_cart = models.ForeignKey(ShoppingCart, on_delete=models.SET_NULL, null=True, blank=True)
+    transaction_details = models.JSONField(encoder=DjangoJSONEncoder, default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -353,7 +345,7 @@ class OrderStatus(models.Model):
     status = models.CharField(max_length=50, choices=choices, unique=True)
     
     def __str__(self) -> str:
-        return self.status
+        return str(self.status)
 
 
 class Order(models.Model):
@@ -365,9 +357,9 @@ class Order(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     shopping_cart_item = models.ForeignKey(ShoppingCartItem, on_delete=models.SET_NULL, null=True, blank=True)
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
-    order_status = models.ForeignKey(OrderStatus, on_delete=models.SET_NULL, null=True, blank=True)
-    payment = models.ForeignKey(PaymentDetail, on_delete=models.SET_NULL, null=True, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.PROTECT, null=True, blank=True)
+    order_status = models.ForeignKey(OrderStatus, on_delete=models.PROTECT)
+    payment = models.ForeignKey(PaymentDetail, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
